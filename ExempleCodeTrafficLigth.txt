@@ -1,0 +1,114 @@
+(*
+Program SCL language for 2 traffic ligth used timers.
+Creator: Marcos Ledo
+11/07/2024
+*)
+
+//Initialize Variable
+#TrafficLigthOn := false;
+
+//Command Traffic Ligth ON/OFF
+IF #inCommandStart THEN
+    #TrafficLigthOn := TRUE;
+END_IF;
+
+IF (NOT #TrafficLigthOn) THEN
+    IF (#inClockBlinks) THEN
+        #outTrafficLigth_A_Green := TRUE;
+        #outTrafficLigth_A_Yellow := TRUE;
+        #outTrafficLigth_A_Red := TRUE;
+        
+        #outTrafficLigth_B_Green := FALSE;
+        #outTrafficLigth_B_Yellow := FALSE;
+        #outTrafficLigth_B_Red := FALSE;
+    ELSE
+        #outTrafficLigth_A_Green := FALSE;
+        #outTrafficLigth_A_Yellow := FALSE;
+        #outTrafficLigth_A_Red := FALSE;
+        
+        #outTrafficLigth_B_Green := TRUE;
+        #outTrafficLigth_B_Yellow := TRUE;
+        #outTrafficLigth_B_Red := TRUE;
+    END_IF;
+    
+ELSE
+    
+    IF #inCommandStop THEN
+        #TrafficLigthOn := FALSE;
+    END_IF;
+    
+    //Timers Sequence Control
+    
+    //Timer Sequence 01
+    #Timer_01(IN := #TrafficLigthOn AND NOT #Timer_04.Q,
+              PT := #inTime_T1);
+    //Timer Sequence 02
+    #Timer_02(IN := #Timer_01.Q,
+              PT := #inTime_T2);
+    //Timer Sequence 03
+    #Timer_03(IN := #Timer_02.Q,
+              PT := #inTime_T3);
+    //Timer Sequence 04
+    #Timer_04(IN := #Timer_03.Q,
+              PT := #inTime_T4);
+    
+(*
+Activating the Lamps Traffic Ligth A
+*)
+// Green Lamp Traffic Ligth A //Set Timer 01
+IF (NOT #Timer_01.Q AND NOT #Timer_02.Q
+    AND NOT #Timer_03.Q AND NOT #Timer_04.Q) THEN
+    #outTrafficLigth_A_Green := TRUE;
+    #outTrafficLigth_A_Yellow := FALSE;
+    #outTrafficLigth_A_Red := False;
+    
+END_IF;
+
+// Yelow Lamp Traffic Ligth A //Timer 2
+IF (#Timer_01.Q AND NOT #Timer_02.Q
+    AND NOT #Timer_03.Q AND NOT #Timer_04.Q) THEN
+    #outTrafficLigth_A_Green := FALSE;
+    #outTrafficLigth_A_Yellow := TRUE;
+    #outTrafficLigth_A_Red := False;
+END_IF;
+
+//Red Lamp Traffic Ligth A //Timer 3 Set
+IF (#Timer_01.Q AND #Timer_02.Q
+    AND NOT #Timer_03.Q AND NOT #Timer_04.Q) THEN
+    #outTrafficLigth_A_Green := FALSE;
+    #outTrafficLigth_A_Yellow := FALSE;
+    #outTrafficLigth_A_Red := TRUE;
+    
+END_IF;
+
+
+(*
+Activating the Lamps Traffic Ligth B
+*)
+// Green Lamp Traffic Ligth B //Set Timer 03
+IF (#Timer_01.Q AND #Timer_02.Q
+    AND NOT #Timer_03.Q AND NOT #Timer_04.Q)
+THEN
+    #outTrafficLigth_B_Green := TRUE;
+    #outTrafficLigth_B_Yellow := FALSE;
+    #outTrafficLigth_B_Red := FALSE;
+    
+END_IF;
+
+// Yelow Lamp Traffic Ligth B //Set Timer 4
+IF (#Timer_01.Q AND #Timer_02.Q
+    AND #Timer_03.Q AND NOT #Timer_04.Q) THEN
+    #outTrafficLigth_B_Green := FALSE;
+    #outTrafficLigth_B_Yellow := TRUE;
+    #outTrafficLigth_B_Red := FALSE;
+END_IF;
+
+// Red Lamp Traffic Ligth B //time 1 + 2
+IF (NOT #Timer_02.Q AND NOT #Timer_03.Q
+    AND NOT #Timer_04.Q) THEN
+    #outTrafficLigth_B_Green := FALSE;
+    #outTrafficLigth_B_Yellow := FALSE;
+    #outTrafficLigth_B_Red := TRUE;
+END_IF;
+
+END_IF;
